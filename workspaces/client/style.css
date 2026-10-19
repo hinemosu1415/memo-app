@@ -1,0 +1,17 @@
+:root { font-family: system-ui, sans-serif; color: #1f2937; background: #f8fafc; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+button, input { font: inherit; }
+.container { max-width: 640px; margin: 64px auto; padding: 0 20px; }
+.eyebrow { color: #2563eb; font-weight: 700; letter-spacing: .04em; }
+h1 { margin: 8px 0; font-size: 2.4rem; }
+.description { color: #64748b; margin-bottom: 30px; }
+.add-form { display: flex; gap: 8px; }
+.add-form input { flex: 1; min-width: 0; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; }
+button { border: 0; border-radius: 8px; padding: 10px 16px; background: #2563eb; color: white; cursor: pointer; }
+button:hover { background: #1d4ed8; }
+.memo-list { padding: 0; list-style: none; margin-top: 24px; }
+.memo-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; border-bottom: 1px solid #e2e8f0; }
+.memo-list span { min-width: 0; overflow-wrap: anywhere; }
+.delete { flex: none; color: #475569; background: #e2e8f0; }
+.delete:hover { background: #cbd5e1; }
