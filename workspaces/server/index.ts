@@ -1,6 +1,8 @@
 import { DatabaseSync } from "node:sqlite";
 import { serve } from "@hono/node-server";
+import { vValidator } from "@hono/valibot-validator";
 import { Hono } from "hono";
+import * as v from "valibot";
 
 
 // DBの初期化・パスの設定
@@ -21,6 +23,18 @@ type Memo = {
 	text: string;
 };
 
+const createMemoSchema = v.object({
+	text: v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(200)),
+});
+
+const memoIdSchema = v.object({
+	id: v.pipe(
+		v.string(),
+		v.transform(Number),
+		v.check((id) => Number.isSafeInteger(id) && id > 0),
+	),
+});
+
 const app = new Hono();
 
 app.get("/api/memos", (c) => {
@@ -32,35 +46,40 @@ app.get("/api/memos", (c) => {
 });
 
 
-app.post("/api/memos", async (c) => {
-	const body = await c.req.json().catch(() => null);
-	const text = typeof body?.text === "string" ? body.text.trim() : "";
+app.post(
+	"/api/memos",
+	vValidator("json", createMemoSchema, (result, c) => {
+		if (!result.success) {
+			return c.json({ error: "メモは1〜200文字で入力してください" }, 400);
+		}
+	}),
+	(c) => {
+		const { text } = c.req.valid("json");
+		db.prepare("INSERT INTO memos (text) VALUES (?)").run(text);
 
-	if (!text || text.length > 200) {
-		return c.json({ error: "メモは1〜200文字で入力してください" }, 400);
-	}
-
-	db.prepare("INSERT INTO memos (text) VALUES (?)").run(text);
-
-	return c.body(null, 201);
-});
+		return c.body(null, 201);
+	},
+);
 
 
-app.delete("/api/memos/:id", (c) => {
-	const id = Number(c.req.param("id"));
+app.delete(
+	"/api/memos/:id",
+	vValidator("param", memoIdSchema, (result, c) => {
+		if (!result.success) {
+			return c.json({ error: "不正なIDです" }, 400);
+		}
+	}),
+	(c) => {
+		const { id } = c.req.valid("param");
+		const result = db.prepare("DELETE FROM memos WHERE id = ?").run(id);
 
-	if (!Number.isSafeInteger(id) || id <= 0) {
-		return c.json({ error: "不正なIDです" }, 400);
-	}
+		if (result.changes === 0) {
+			return c.json({ error: "メモが見つかりません" }, 404);
+		}
 
-	const result = db.prepare("DELETE FROM memos WHERE id = ?").run(id);
-
-	if (result.changes === 0) {
-		return c.json({ error: "メモが見つかりません" }, 404);
-	}
-
-	return c.body(null, 204);
-});
+		return c.body(null, 204);
+	},
+);
 
 
 const port = Number(process.env.PORT ?? 3001);

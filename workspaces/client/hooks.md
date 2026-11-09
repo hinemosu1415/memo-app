@@ -147,3 +147,13 @@ POST と同様に、フックは削除成功後に GET で一覧を読み直し�
 ## 通信に失敗した場合
 
 GET・POST・DELETE のいずれかで失敗すると、フックは `console.error(cause)` でブラウザのコンソールに記録します。このアプリには画面上のエラー表示はありません。POST や DELETE 自体は成功した後、その後の一覧 GET だけが失敗した場合も、画面の一覧は更新されません。
+
+
+React Router
+drrizle ORM
+Cloudflare D1,wrangler
+ソフトウェアアーキテクチャ, オブジェクト指向
+(Tanstack Query)
+Hono上級編
+認証
+ジェネリクス型
