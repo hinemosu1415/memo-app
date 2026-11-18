@@ -1,27 +1,13 @@
-import { DatabaseSync } from "node:sqlite";
 import { serve } from "@hono/node-server";
 import { vValidator } from "@hono/valibot-validator";
+import { desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import * as v from "valibot";
-
-
-// DBの初期化・パスの設定
-const db = new DatabaseSync("./data/app.sqlite");
-db.exec(`
-  CREATE TABLE IF NOT EXISTS memos (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    text TEXT NOT NULL
-  )
-`);
+import { db } from "./db";
+import { memos as memosTable } from "./db/schema";
 
 
 // 以下はAPIのルーティング
-
-// メモの型定義
-type Memo = {
-	id: number;
-	text: string;
-};
 
 const createMemoSchema = v.object({
 	text: v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(200)),
@@ -38,9 +24,7 @@ const memoIdSchema = v.object({
 const app = new Hono();
 
 app.get("/api/memos", (c) => {
-	const memos = db
-		.prepare("SELECT id, text FROM memos ORDER BY id DESC")
-		.all() as Memo[];
+	const memos = db.select().from(memosTable).orderBy(desc(memosTable.id)).all();
 
 	return c.json(memos);
 });
@@ -55,7 +39,7 @@ app.post(
 	}),
 	(c) => {
 		const { text } = c.req.valid("json");
-		db.prepare("INSERT INTO memos (text) VALUES (?)").run(text);
+		db.insert(memosTable).values({ text }).run();
 
 		return c.body(null, 201);
 	},
@@ -71,7 +55,7 @@ app.delete(
 	}),
 	(c) => {
 		const { id } = c.req.valid("param");
-		const result = db.prepare("DELETE FROM memos WHERE id = ?").run(id);
+		const result = db.delete(memosTable).where(eq(memosTable.id, id)).run();
 
 		if (result.changes === 0) {
 			return c.json({ error: "メモが見つかりません" }, 404);
