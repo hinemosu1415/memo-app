@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS `memos` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`text` text NOT NULL
+);
